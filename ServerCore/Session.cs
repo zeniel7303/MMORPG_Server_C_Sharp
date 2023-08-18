@@ -56,6 +56,8 @@ namespace ServerCore
 		//RecvBuffer m_recvBuffer = new RecvBuffer(65535);
 
 		object m_lock = new object();
+        bool m_pending = false;
+		Queue<byte[]> m_sendQueue = new Queue<byte[]>();
 		//Queue<ArraySegment<byte>> m_sendQueue = new Queue<ArraySegment<byte>>();
 		//List<ArraySegment<byte>> m_pendingList = new List<ArraySegment<byte>>();
 		SocketAsyncEventArgs m_sendArgs = new SocketAsyncEventArgs();
@@ -99,8 +101,13 @@ namespace ServerCore
 
 		public void Send(byte[] _sendBuffer)
         {
-			m_socket.Send(_sendBuffer);
-        }
+			lock (m_lock)
+            {
+				m_sendQueue.Enqueue(_sendBuffer);
+				if (m_pending == false)
+					RegisterSend();
+			}
+		}
 
 		public void Send(List<ArraySegment<byte>> _sendBuffList)
 		{
@@ -117,22 +124,20 @@ namespace ServerCore
 			//}
 		}
 
-		public void Send(ArraySegment<byte> _sendBuff)
-		{
-			//lock (m_lock)
-			//{
-			//	m_sendQueue.Enqueue(_sendBuff);
-			//	if (m_pendingList.Count == 0)
-			//		RegisterSend();
-			//}
-		}
-
 		#region 네트워크 통신
 
 		void RegisterSend()
 		{
 			if (m_disconnected == 1)
 				return;
+
+			m_pending = true;
+			byte[] buff = m_sendQueue.Dequeue();
+			m_sendArgs.SetBuffer(buff, 0, buff.Length);
+
+			bool pending = m_socket.ReceiveAsync(m_sendArgs);
+			if (pending == false)
+				OnSendCompleted(null, m_sendArgs);
 
 			//while (m_sendQueue.Count > 0)
 			//{
@@ -155,31 +160,35 @@ namespace ServerCore
 
 		void OnSendCompleted(object _sender, SocketAsyncEventArgs _args)
 		{
-			//lock (m_lock)
-			//{
-			//	if (_args.BytesTransferred > 0 && _args.SocketError == SocketError.Success)
-			//	{
-			//		try
-			//		{
-			//			m_sendArgs.BufferList = null;
-			//			m_pendingList.Clear();
+			// 이 곳의 호출 시점을 알 수도 없고(Send 및 EventHandler부분)
+			// 멀티쓰레드 환경도 생각해야하므로 Lock 걸어야함
+			lock (m_lock)
+            {
+                if (_args.BytesTransferred > 0 && _args.SocketError == SocketError.Success)
+                {
+                    try
+                    {
+						//m_sendArgs.BufferList = null;
+						//m_pendingList.Clear();
 
-			//			OnSend(m_sendArgs.BytesTransferred);
+						//OnSend(m_sendArgs.BytesTransferred);
 
-			//			if (m_sendQueue.Count > 0)
-			//				RegisterSend();
-			//		}
-			//		catch (Exception e)
-			//		{
-			//			Console.WriteLine($"OnSendCompleted Failed {e}");
-			//		}
-			//	}
-			//	else
-			//	{
-			//		Disconnect();
-			//	}
-			//}
-		}
+						if (m_sendQueue.Count > 0)
+							RegisterSend();
+						else
+							m_pending = false;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"OnSendCompleted Failed {e}");
+                    }
+                }
+                else
+                {
+                    Disconnect();
+                }
+            }
+        }
 
 		void RegisterRecv()
 		{
