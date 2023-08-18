@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace ServerCore
 {
-	/*
+    /*
 	public abstract class PacketSession : Session
 	{
 		public static readonly int HeaderSize = 2;
@@ -47,7 +47,7 @@ namespace ServerCore
 	}
 	*/
 
-	public class Session
+	public abstract class Session
 	//public abstract class Session
 	{
 		Socket m_socket;
@@ -56,24 +56,23 @@ namespace ServerCore
 		//RecvBuffer m_recvBuffer = new RecvBuffer(65535);
 
 		object m_lock = new object();
-        bool m_pending = false;
 		Queue<byte[]> m_sendQueue = new Queue<byte[]>();
 		//Queue<ArraySegment<byte>> m_sendQueue = new Queue<ArraySegment<byte>>();
-		//List<ArraySegment<byte>> m_pendingList = new List<ArraySegment<byte>>();
+		List<ArraySegment<byte>> m_pendingList = new List<ArraySegment<byte>>();
 		SocketAsyncEventArgs m_sendArgs = new SocketAsyncEventArgs();
 		SocketAsyncEventArgs m_recvArgs = new SocketAsyncEventArgs();
 
-		//public abstract void OnConnected(EndPoint _endPoint);
-		//public abstract int OnRecv(ArraySegment<byte> _buffer);
-		//public abstract void OnSend(int _numOfBytes);
-		//public abstract void OnDisconnected(EndPoint _endPoint);
+		public abstract void OnConnected(EndPoint _endPoint);
+		public abstract void OnRecv(ArraySegment<byte> _buffer);
+		public abstract void OnSend(int _numOfBytes);
+		public abstract void OnDisconnected(EndPoint _endPoint);
 
 		void Clear()
 		{
 			lock (m_lock)
 			{
-				//m_sendQueue.Clear();
-				//m_pendingList.Clear();
+				m_sendQueue.Clear();
+				m_pendingList.Clear();
 			}
 		}
 
@@ -93,7 +92,7 @@ namespace ServerCore
 			if (Interlocked.Exchange(ref m_disconnected, 1) == 1)
 				return;
 
-			//OnDisconnected(m_socket.RemoteEndPoint);
+			OnDisconnected(m_socket.RemoteEndPoint);
 			m_socket.Shutdown(SocketShutdown.Both);
 			m_socket.Close();
 			Clear();
@@ -104,7 +103,7 @@ namespace ServerCore
 			lock (m_lock)
             {
 				m_sendQueue.Enqueue(_sendBuffer);
-				if (m_pending == false)
+				if (m_pendingList.Count == 0)       //if (m_pending == false)
 					RegisterSend();
 			}
 		}
@@ -131,32 +130,24 @@ namespace ServerCore
 			if (m_disconnected == 1)
 				return;
 
-			m_pending = true;
-			byte[] buff = m_sendQueue.Dequeue();
-			m_sendArgs.SetBuffer(buff, 0, buff.Length);
+			while (m_sendQueue.Count > 0)
+            {
+				byte[] buff = m_sendQueue.Dequeue();
+				m_pendingList.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+			}
+			m_sendArgs.BufferList = m_pendingList;
 
-			bool pending = m_socket.ReceiveAsync(m_sendArgs);
-			if (pending == false)
-				OnSendCompleted(null, m_sendArgs);
-
-			//while (m_sendQueue.Count > 0)
-			//{
-			//	ArraySegment<byte> buff = m_sendQueue.Dequeue();
-			//	m_pendingList.Add(buff);
-			//}
-			//m_sendArgs.BufferList = m_pendingList;
-
-			//try
-			//{
-			//	bool pending = m_socket.SendAsync(m_sendArgs);
-			//	if (pending == false)
-			//		OnSendCompleted(null, m_sendArgs);
-			//}
-			//catch (Exception e)
-			//{
-			//	Console.WriteLine($"RegisterSend Failed {e}");
-			//}
-		}
+            try
+            {
+                bool pending = m_socket.SendAsync(m_sendArgs);
+                if (pending == false)
+                    OnSendCompleted(null, m_sendArgs);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"RegisterSend Failed {e}");
+            }
+        }
 
 		void OnSendCompleted(object _sender, SocketAsyncEventArgs _args)
 		{
@@ -168,15 +159,14 @@ namespace ServerCore
                 {
                     try
                     {
-						//m_sendArgs.BufferList = null;
-						//m_pendingList.Clear();
+						// 전부 성공적으로 보냈으니 초기화
+						m_sendArgs.BufferList = null;	// 사실 크게 할 필요는 없다.
+						m_pendingList.Clear();
 
-						//OnSend(m_sendArgs.BytesTransferred);
+						OnSend(m_sendArgs.BytesTransferred);
 
 						if (m_sendQueue.Count > 0)
 							RegisterSend();
-						else
-							m_pending = false;
                     }
                     catch (Exception e)
                     {
@@ -246,9 +236,7 @@ namespace ServerCore
 						return;
 					}
 					*/
-					string recvData = Encoding.UTF8.GetString(
-						_args.Buffer, _args.Offset, _args.BytesTransferred);
-					Console.WriteLine($"[From Client] {recvData}");
+					OnRecv(new ArraySegment<byte>(_args.Buffer, _args.Offset, _args.BytesTransferred));
 
 					RegisterRecv();
 				}

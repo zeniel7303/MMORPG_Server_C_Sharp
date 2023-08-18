@@ -9,15 +9,13 @@ namespace ServerCore
 	class Listener
 	{
 		Socket m_listenSocket;
-		Action<Socket> m_onAcceptHandler;
-		//Func<Session> m_sessionFactory;
+		Func<Session> m_sessionFactory;
 
-		public void Init(IPEndPoint _endPoint, Action<Socket> _onAcceptHandler,/*Func<Session> _sessionFactory,*/
+		public void Init(IPEndPoint _endPoint, Func<Session> _sessionFactory,
 			int _register = 10, int _backLog = 100)
 		{
 			m_listenSocket = new Socket(_endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-			m_onAcceptHandler += _onAcceptHandler;
-			//m_sessionFactory += _sessionFactory;
+			m_sessionFactory += _sessionFactory;
 
 			m_listenSocket.Bind(_endPoint);
 
@@ -48,11 +46,9 @@ namespace ServerCore
 		{
 			if (_args.SocketError == SocketError.Success)
 			{
-				m_onAcceptHandler.Invoke(_args.AcceptSocket);
-
-				//Session session = m_sessionFactory.Invoke();
-				//session.Start(_args.AcceptSocket);
-				//session.OnConnected(_args.AcceptSocket.RemoteEndPoint);
+				Session session = m_sessionFactory.Invoke();
+				session.Start(_args.AcceptSocket);
+				session.OnConnected(_args.AcceptSocket.RemoteEndPoint);
 			}
 			else
 				Console.WriteLine(_args.SocketError.ToString());
