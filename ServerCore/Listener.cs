@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ServerCore
 {
-	class Listener
+	public class Listener
 	{
 		Socket m_listenSocket;
 		Func<Session> m_sessionFactory;
