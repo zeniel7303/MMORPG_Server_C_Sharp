@@ -48,12 +48,11 @@ namespace ServerCore
 	*/
 
 	public abstract class Session
-	//public abstract class Session
 	{
 		Socket m_socket;
 		int m_disconnected = 0;
 
-		//RecvBuffer m_recvBuffer = new RecvBuffer(65535);
+		RecvBuffer m_recvBuffer = new RecvBuffer(1024);
 
 		object m_lock = new object();
 		Queue<byte[]> m_sendQueue = new Queue<byte[]>();
@@ -63,7 +62,7 @@ namespace ServerCore
 		SocketAsyncEventArgs m_recvArgs = new SocketAsyncEventArgs();
 
 		public abstract void OnConnected(EndPoint _endPoint);
-		public abstract void OnRecv(ArraySegment<byte> _buffer);
+		public abstract int OnRecv(ArraySegment<byte> _buffer);
 		public abstract void OnSend(int _numOfBytes);
 		public abstract void OnDisconnected(EndPoint _endPoint);
 
@@ -83,7 +82,6 @@ namespace ServerCore
 			m_recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
 			m_sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
 
-			m_recvArgs.SetBuffer(new byte[1024], 0, 1024);
 			RegisterRecv();
 		}
 
@@ -185,12 +183,8 @@ namespace ServerCore
 			if (m_disconnected == 1)
 				return;
 
-			bool pending = m_socket.ReceiveAsync(m_recvArgs);
-			if (pending == false)
-				OnRecvCompleted(null, m_recvArgs);
-
-			/*
 			m_recvBuffer.Clean();
+			// 다음으로 버퍼를 받을 공간 할당
 			ArraySegment<byte> segment = m_recvBuffer.WriteSegment;
 			m_recvArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
 
@@ -204,7 +198,6 @@ namespace ServerCore
 			{
 				Console.WriteLine($"RegisterRecv Failed {e}");
 			}
-			*/
 		}
 
 		void OnRecvCompleted(object sender, SocketAsyncEventArgs _args)
@@ -213,7 +206,6 @@ namespace ServerCore
 			{
 				try
 				{
-					/*
 					// Write 커서 이동
 					if (m_recvBuffer.OnWrite(_args.BytesTransferred) == false)
 					{
@@ -223,6 +215,7 @@ namespace ServerCore
 
 					// 컨텐츠 쪽으로 데이터를 넘겨주고 얼마나 처리했는지 받는다
 					int processLen = OnRecv(m_recvBuffer.ReadSegment);
+					// 처리한 길이가 0보다 작거나 recvBuffer의 데이터사이즈보다 많다면 문제가 있는 상황
 					if (processLen < 0 || m_recvBuffer.DataSize < processLen)
 					{
 						Disconnect();
@@ -235,8 +228,6 @@ namespace ServerCore
 						Disconnect();
 						return;
 					}
-					*/
-					OnRecv(new ArraySegment<byte>(_args.Buffer, _args.Offset, _args.BytesTransferred));
 
 					RegisterRecv();
 				}
