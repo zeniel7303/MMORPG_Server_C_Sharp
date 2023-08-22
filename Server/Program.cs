@@ -1,5 +1,6 @@
 ﻿using ServerCore;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -8,19 +9,33 @@ using System.Threading.Tasks;
 
 namespace ServerCore
 {
+    class Player
+    {
+		public int hp;
+		public int attack;
+		public string name;
+		public List<int> skillList = new List<int>();
+	}
+
 	class GameSession : Session
 	{
 		public override void OnConnected(EndPoint _endPoint)
 		{
 			Console.WriteLine($"OnConnected : {_endPoint}");
 
+			Player player = new Player() { hp = 100, attack = 10 };
+
 			try
 			{
-				byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome");
+				ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
+				byte[] buffer1 = BitConverter.GetBytes(player.hp);
+				byte[] buffer2 = BitConverter.GetBytes(player.attack);
+				Array.Copy(buffer1, 0, openSegment.Array, openSegment.Offset, buffer1.Length);
+				Array.Copy(buffer2, 0, openSegment.Array, openSegment.Offset + buffer1.Length, buffer2.Length);
+				ArraySegment<byte> sendBuff = SendBufferHelper.Close(buffer1.Length + buffer2.Length);
+
 				Send(sendBuff);
-
 				Thread.Sleep(1000);
-
 				Disconnect();
 			}
 			catch (Exception e)

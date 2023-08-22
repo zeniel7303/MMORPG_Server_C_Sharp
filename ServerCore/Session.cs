@@ -7,46 +7,6 @@ using System.Threading;
 
 namespace ServerCore
 {
-    /*
-	public abstract class PacketSession : Session
-	{
-		public static readonly int HeaderSize = 2;
-
-		// [size(2)][packetId(2)][ ... ][size(2)][packetId(2)][ ... ]
-		public sealed override int OnRecv(ArraySegment<byte> _buffer)
-		{
-			int processLen = 0;
-			int packetCount = 0;
-
-			while (true)
-			{
-				// 최소한 헤더는 파싱할 수 있는지 확인
-				if (_buffer.Count < HeaderSize)
-					break;
-
-				// 패킷이 완전체로 도착했는지 확인
-				ushort dataSize = BitConverter.ToUInt16(_buffer.Array, _buffer.Offset);
-				if (_buffer.Count < dataSize)
-					break;
-
-				// 여기까지 왔으면 패킷 조립 가능
-				OnRecvPacket(new ArraySegment<byte>(_buffer.Array, _buffer.Offset, dataSize));
-				packetCount++;
-
-				processLen += dataSize;
-				_buffer = new ArraySegment<byte>(_buffer.Array, _buffer.Offset + dataSize, _buffer.Count - dataSize);
-			}
-
-			if (packetCount > 1)
-				Console.WriteLine($"패킷 모아보내기 : {packetCount}");
-
-			return processLen;
-		}
-
-		public abstract void OnRecvPacket(ArraySegment<byte> buffer);
-	}
-	*/
-
 	public abstract class Session
 	{
 		Socket m_socket;
@@ -55,8 +15,7 @@ namespace ServerCore
 		RecvBuffer m_recvBuffer = new RecvBuffer(1024);
 
 		object m_lock = new object();
-		Queue<byte[]> m_sendQueue = new Queue<byte[]>();
-		//Queue<ArraySegment<byte>> m_sendQueue = new Queue<ArraySegment<byte>>();
+		Queue<ArraySegment<byte>> m_sendQueue = new Queue<ArraySegment<byte>>();
 		List<ArraySegment<byte>> m_pendingList = new List<ArraySegment<byte>>();
 		SocketAsyncEventArgs m_sendArgs = new SocketAsyncEventArgs();
 		SocketAsyncEventArgs m_recvArgs = new SocketAsyncEventArgs();
@@ -96,7 +55,7 @@ namespace ServerCore
 			Clear();
 		}
 
-		public void Send(byte[] _sendBuffer)
+		public void Send(ArraySegment<byte> _sendBuffer)
         {
 			lock (m_lock)
             {
@@ -106,20 +65,22 @@ namespace ServerCore
 			}
 		}
 
+		/*
 		public void Send(List<ArraySegment<byte>> _sendBuffList)
 		{
-			//if (_sendBuffList.Count == 0)
-			//	return;
+            if (_sendBuffList.Count == 0)
+                return;
 
-			//lock (m_lock)
-			//{
-			//	foreach (ArraySegment<byte> sendBuff in _sendBuffList)
-			//		m_sendQueue.Enqueue(sendBuff);
+            lock (m_lock)
+            {
+                foreach (ArraySegment<byte> sendBuff in _sendBuffList)
+                    m_sendQueue.Enqueue(sendBuff);
 
-			//	if (m_pendingList.Count == 0)
-			//		RegisterSend();
-			//}
-		}
+                if (m_pendingList.Count == 0)
+                    RegisterSend();
+            }
+        }
+		*/
 
 		#region 네트워크 통신
 
@@ -130,8 +91,8 @@ namespace ServerCore
 
 			while (m_sendQueue.Count > 0)
             {
-				byte[] buff = m_sendQueue.Dequeue();
-				m_pendingList.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+				ArraySegment<byte> buff = m_sendQueue.Dequeue();
+				m_pendingList.Add(buff);
 			}
 			m_sendArgs.BufferList = m_pendingList;
 
