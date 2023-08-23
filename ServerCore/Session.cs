@@ -7,6 +7,45 @@ using System.Threading;
 
 namespace ServerCore
 {
+	public abstract class PacketSession : Session
+	{
+		public static readonly int s_headerSize = 2;
+
+		// [size(2)][id(2)][ ... ][size(2)][id(2)][ ... ]
+		public sealed override int OnRecv(ArraySegment<byte> _buffer)
+		{
+			int processLen = 0;
+			int packetCount = 0;
+
+			while (true)
+			{
+				// 최소한 헤더를 파싱할 수 있는지 확인
+				if (_buffer.Count < s_headerSize)
+					break;
+
+				// 패킷이 완전체로 도착했는지 확인
+				ushort dataSize = BitConverter.ToUInt16(_buffer.Array, _buffer.Offset);
+				if (_buffer.Count < dataSize)
+					break;
+
+				// 여기까지 왔으면 패킷 처리 가능
+				// ArraySegment는 class가 아니라 struct이므로 스택 영역에 복사되므로 부담없이 해도된다.
+				OnRecvPacket(new ArraySegment<byte>(_buffer.Array, _buffer.Offset, dataSize));
+				packetCount++;
+
+				processLen += dataSize;
+				_buffer = new ArraySegment<byte>(_buffer.Array, _buffer.Offset + dataSize, _buffer.Count - dataSize);
+			}
+
+			if (packetCount > 1)
+				Console.WriteLine($"패킷 모아보내기 : {packetCount}");
+
+			return processLen;
+		}
+
+		public abstract void OnRecvPacket(ArraySegment<byte> _buffer);
+	}
+
 	public abstract class Session
 	{
 		Socket m_socket;

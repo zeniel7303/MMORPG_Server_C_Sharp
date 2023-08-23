@@ -11,13 +11,14 @@ namespace ServerCore
 		public static ThreadLocal<SendBuffer> CurrentBuffer = 
 			new ThreadLocal<SendBuffer>(() => { return null; });
 
-		public static int ChunkSize { get; set; } = 4096;
+		public static int ChunkSize { get; set; } = 4096 * 100;
 
 		public static ArraySegment<byte> Open(int _reserveSize)
 		{
 			if (CurrentBuffer.Value == null)
 				CurrentBuffer.Value = new SendBuffer(ChunkSize);
 
+			// C#이므로 그냥 새로 다시 할당
 			if (CurrentBuffer.Value.FreeSize < _reserveSize)
 				CurrentBuffer.Value = new SendBuffer(ChunkSize);
 
@@ -32,7 +33,7 @@ namespace ServerCore
 
 	public class SendBuffer
 	{
-		// [][][][][][][][][u][]
+		// 여러 쓰레드에서 참조할 순 있으나 읽기만 하므로 큰 문제는 없다.
 		byte[] m_buffer;
 		int m_usedSize = 0;
 
