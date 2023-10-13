@@ -8,6 +8,27 @@ namespace PacketGenerator
 {
     class PacketFormat
     {
+		// {0} 패킷 이름/번호 목록
+		// {1} 패킷 목록
+		public static string fileFormat =
+@"using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Net;
+using ServerCore;
+
+public enum PacketID
+{{
+	{0}
+}}
+{1}
+";
+
+		// {0} 패킷 이름
+		// {1} 패킷 번호
+		public static string packetEnumFormat =
+@"{0} = {1},";
+
 		// {0} 패킷 이름
 		// {1} 멤버 변수들
 		// {2} 멤버 변수 Read
@@ -93,6 +114,12 @@ public List<{0}> {1}s = new List<{0}>();";
 count += sizeof({2});";
 
 		// {0} 변수 이름
+		// {1} 변수 형식
+		public static string readByteFormat =
+@"this.{0} = ({1})_segment.Array[_segment.Offset + count];
+count += sizeof({1});";
+
+		// {0} 변수 이름
 		public static string readStringFormat =
 @"ushort {0}Len = BitConverter.ToUInt16(span.Slice(count, span.Length - count));
 count += sizeof(ushort);
@@ -116,6 +143,12 @@ for (int i = 0; i < {1}Len; i++)
 		// {1} 변수 형식
 		public static string writeFormat =
 @"success &= BitConverter.TryWriteBytes(span.Slice(count, span.Length - count), this.{0});
+count += sizeof({1});";
+
+		// {0} 변수 이름
+		// {1} 변수 형식
+		public static string writeByteFormat =
+@"segment.Array[segment.Offset + count] = (byte)this.{0};
 count += sizeof({1});";
 
 		// {0} 변수 이름
