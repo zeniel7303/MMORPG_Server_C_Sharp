@@ -10,15 +10,22 @@ namespace PacketGenerator
         static ushort packetId;
         static string packetEnums;
 
+        static string managerRegister;
+        static string clientRegister;
+        static string serverRegister;
+
         static void Main(string[] args)
         {
-            string pdlPath = "../../../PDL.xml";
+            string pdlPath = "../PDL.xml";
 
             XmlReaderSettings settings = new XmlReaderSettings()
             {
                 IgnoreComments = true,      // 주석 무시
                 IgnoreWhitespace = true     // Spacebar 무시
             };
+
+            if (args.Length >= 1)
+                pdlPath = args[0];
 
             using (XmlReader reader = XmlReader.Create(pdlPath, settings))
             {
@@ -34,6 +41,8 @@ namespace PacketGenerator
 
                 string fileText = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
                 File.WriteAllText("GenPackets.cs", fileText);
+                string managerText = string.Format(PacketFormat.managerFormat, managerRegister);
+                File.WriteAllText("PacketManager.cs", managerText);
             }
         }
 
@@ -58,6 +67,7 @@ namespace PacketGenerator
             Tuple<string, string, string> t = ParseMembers(_reader);
             genPackets += string.Format(PacketFormat.packetFormat, packetName, t.Item1, t.Item2, t.Item3);
             packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId) + Environment.NewLine + "\t";
+            managerRegister += string.Format(PacketFormat.managerRegisterFormat, packetName) + Environment.NewLine;
         }
 
         // {1} 멤버 변수들
