@@ -5,19 +5,15 @@ using System.Text;
 
 class PacketHandler
 {
-	public static void PlayerInfoReqHandler(PacketSession _session, IPacket _packet)
+	public static void C_PlayerInfoReqHandler(PacketSession _session, IPacket _packet)
 	{
-		PlayerInfoReq packet = _packet as PlayerInfoReq;
+		C_PlayerInfoReq packet = _packet as C_PlayerInfoReq;
 
 		Console.WriteLine($"PlayerInfoReq: {packet.playerId} {packet.name}");
 
-		foreach (PlayerInfoReq.Skill skill in packet.skills)
+		foreach (C_PlayerInfoReq.Skill skill in packet.skills)
 		{
 			Console.WriteLine($"Skill({skill.id})({skill.level})({skill.duration})");
 		}
-	}
-	public static void TestHandler(PacketSession _session, IPacket _packet)
-	{
-
 	}
 }
