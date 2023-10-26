@@ -104,23 +104,6 @@ namespace ServerCore
 			}
 		}
 
-		/*
-		public void Send(List<ArraySegment<byte>> _sendBuffList)
-		{
-            if (_sendBuffList.Count == 0)
-                return;
-
-            lock (m_lock)
-            {
-                foreach (ArraySegment<byte> sendBuff in _sendBuffList)
-                    m_sendQueue.Enqueue(sendBuff);
-
-                if (m_pendingList.Count == 0)
-                    RegisterSend();
-            }
-        }
-		*/
-
 		#region 네트워크 통신
 
 		void RegisterSend()
