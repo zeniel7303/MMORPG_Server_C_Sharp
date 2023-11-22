@@ -5,7 +5,7 @@ using System.Text;
 
 class PacketHandler
 {
-	public static void S_TestHandler(PacketSession _session, IPacket _packet)
+	public static void S_ChatHandler(PacketSession _session, IPacket _packet)
 	{
 
 	}
