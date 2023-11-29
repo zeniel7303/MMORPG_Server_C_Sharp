@@ -25,5 +25,19 @@ namespace Server
 				m_sessions.Remove(session);
 			}
 		}
-	}
+
+		public void Broadcast(ClientSession _clientSession, string _chat)
+        {
+			S_Chat packet = new S_Chat();
+			packet.playerId = _clientSession.SessionId;
+			packet.chat = $"{_chat} I am {packet.playerId} \n";
+			ArraySegment<byte> segment = packet.Write();
+
+			lock(m_lock)
+            {
+				foreach (ClientSession session in m_sessions)
+					session.Send(segment);
+            }
+		}
+    }
 }

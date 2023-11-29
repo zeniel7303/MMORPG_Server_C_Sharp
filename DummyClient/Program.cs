@@ -18,20 +18,23 @@ namespace DummyClient
 
 			Connector connector = new Connector();
 
-			connector.Connect(endPoint, () => { return new ServerSession(); });
+			connector.Connect(endPoint, 
+				() => { return SessionManager.Instance.Generate(); }, 
+				100);
 
 			while (true)
             {
 				try
 				{
-					
+					SessionManager.Instance.SendForEach();
 				}
 				catch (Exception e)
 				{
 					Console.WriteLine(e.ToString());
 				}
 
-				Thread.Sleep(100);
+				// 왜 250? 이동패킷 1초에 4번 보낸다는 가정하에 대충 이렇게 세팅
+				Thread.Sleep(250);
 			}
 		}
 	}

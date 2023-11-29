@@ -20,16 +20,7 @@ namespace Server
 
 			try
 			{
-				//Packet packet = new Packet() { size = 4, id = 10 };
-
-				//ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
-				//byte[] buffer1 = BitConverter.GetBytes(packet.size);
-				//byte[] buffer2 = BitConverter.GetBytes(packet.id);
-				//Array.Copy(buffer1, 0, openSegment.Array, openSegment.Offset, buffer1.Length);
-				//Array.Copy(buffer2, 0, openSegment.Array, openSegment.Offset + buffer1.Length, buffer2.Length);
-				//ArraySegment<byte> sendBuff = SendBufferHelper.Close(packet.size);
-
-				//Send(sendBuff);
+				Program.Room.Enter(this);
 				Thread.Sleep(5000);
 				Disconnect();
 			}
@@ -51,6 +42,13 @@ namespace Server
 
 		public override void OnDisconnected(EndPoint _endPoint)
 		{
+			SessionManager.Instance.Remove(this);
+			if(Room != null)
+            {
+				Room.Leave(this);
+				Room = null;
+            }
+
 			Console.WriteLine($"OnDisconnected : {_endPoint}");
 		}
 	}

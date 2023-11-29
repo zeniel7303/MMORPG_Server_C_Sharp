@@ -22,8 +22,7 @@ namespace ServerCore
 			// backlog : 최대 대기수
 			m_listenSocket.Listen(_backLog);
 
-			// 아직은 1개만
-            //for (int i = 0; i < _register; i++)
+            for (int i = 0; i < _register; i++)
             {
                 SocketAsyncEventArgs args = new SocketAsyncEventArgs();
                 args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);

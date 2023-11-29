@@ -19,6 +19,7 @@ namespace Server
 			{
 				int sessionId = ++m_sessionId;
 
+				// TODO : ObjectPool
 				ClientSession session = new ClientSession();
 				session.SessionId = sessionId;
 				m_sessions.Add(sessionId, session);
