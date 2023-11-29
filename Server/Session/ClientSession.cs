@@ -20,9 +20,7 @@ namespace Server
 
 			try
 			{
-				Program.Room.Enter(this);
-				Thread.Sleep(5000);
-				Disconnect();
+				Program.Room.Push(() => Program.Room.Enter(this));
 			}
 			catch (Exception e)
 			{
@@ -45,7 +43,8 @@ namespace Server
 			SessionManager.Instance.Remove(this);
 			if(Room != null)
             {
-				Room.Leave(this);
+				GameRoom tempRoom = Room;
+				tempRoom.Push(() => tempRoom.Leave(this));
 				Room = null;
             }
 

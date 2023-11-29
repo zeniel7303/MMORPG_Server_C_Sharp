@@ -14,7 +14,10 @@ class PacketHandler
 		if (clientSession.Room == null)
 			return;
 
-		GameRoom room = clientSession.Room;
-		room.Broadcast(clientSession, chatPacket.chat);
+		// clientSession의 Room이 NULL로 바뀌면 나중에 잡큐에서 꺼내쓸 때 문제가 생김.
+		// -> 임시 객체를 만들어 문제 해결
+		GameRoom tempRoom = clientSession.Room;
+		tempRoom.Push(
+			() => tempRoom.Broadcast(clientSession, chatPacket.chat));
 	}
 }
