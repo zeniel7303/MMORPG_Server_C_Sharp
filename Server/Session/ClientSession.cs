@@ -35,7 +35,7 @@ namespace Server
 
 		public override void OnSend(int _numOfBytes)
 		{
-			Console.WriteLine($"Transferred bytes : {_numOfBytes}");
+			//Console.WriteLine($"Transferred bytes : {_numOfBytes}");
 		}
 
 		public override void OnDisconnected(EndPoint _endPoint)

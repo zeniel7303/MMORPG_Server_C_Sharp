@@ -11,6 +11,6 @@ class PacketHandler
 		S_Chat chatPacket = _packet as S_Chat;
 		ServerSession serverSession = _session as ServerSession;
 
-		Console.Write(chatPacket.chat);
+		//Console.Write(chatPacket.chat);
 	}
 }
