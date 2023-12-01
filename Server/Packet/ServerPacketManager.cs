@@ -5,14 +5,14 @@ using System.Collections.Generic;
 class PacketManager
 {
 	#region Singleton
-	static PacketManager _instance = new PacketManager();
-	public static PacketManager Instance{ get { return _instance; } }
+	static PacketManager m_instance = new PacketManager();
+	public static PacketManager Instance { get { return m_instance; } }
 	#endregion
 
 	PacketManager()
-    {
+	{
 		Register();
-    }
+	}
 
 	Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>> m_onRecv = new Dictionary<ushort, Action<PacketSession, ArraySegment<byte>>>();
 	Dictionary<ushort, Action<PacketSession, IPacket>> m_handler = new Dictionary<ushort, Action<PacketSession, IPacket>>();
@@ -28,7 +28,6 @@ class PacketManager
 	{
 		ushort count = 0;
 
-		// 사이즈와 id 읽기
 		ushort size = BitConverter.ToUInt16(_buffer.Array, _buffer.Offset);
 		count += 2;
 		ushort id = BitConverter.ToUInt16(_buffer.Array, _buffer.Offset + count);

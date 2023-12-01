@@ -46,9 +46,6 @@ namespace ServerCore
 
 		public ArraySegment<byte> Open(int _reserveSize)
 		{
-			if (_reserveSize > FreeSize)
-				return null;
-
 			return new ArraySegment<byte>(m_buffer, m_usedSize, _reserveSize);
 		}
 

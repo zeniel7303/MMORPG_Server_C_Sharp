@@ -14,7 +14,7 @@ public enum PacketID
 interface IPacket
 {
 	ushort Protocol { get; }
-	void Read(ArraySegment<byte> _segment);
+	void Read(ArraySegment<byte> segment);
 	ArraySegment<byte> Write();
 }
 
@@ -25,14 +25,14 @@ class C_Chat : IPacket
 
 	public ushort Protocol { get { return (ushort)PacketID.C_Chat; } }
 
-	public void Read(ArraySegment<byte> segment)
+	public void Read(ArraySegment<byte> _segment)
 	{
 		ushort count = 0;
 		count += sizeof(ushort);
 		count += sizeof(ushort);
-		ushort chatLen = BitConverter.ToUInt16(segment.Array, segment.Offset + count);
+		ushort chatLen = BitConverter.ToUInt16(_segment.Array, _segment.Offset + count);
 		count += sizeof(ushort);
-		this.chat = Encoding.Unicode.GetString(segment.Array, segment.Offset + count, chatLen);
+		this.chat = Encoding.Unicode.GetString(_segment.Array, _segment.Offset + count, chatLen);
 		count += chatLen;
 	}
 
@@ -62,16 +62,16 @@ class S_Chat : IPacket
 
 	public ushort Protocol { get { return (ushort)PacketID.S_Chat; } }
 
-	public void Read(ArraySegment<byte> segment)
+	public void Read(ArraySegment<byte> _segment)
 	{
 		ushort count = 0;
 		count += sizeof(ushort);
 		count += sizeof(ushort);
-		this.playerId = BitConverter.ToInt32(segment.Array, segment.Offset + count);
+		this.playerId = BitConverter.ToInt32(_segment.Array, _segment.Offset + count);
 		count += sizeof(int);
-		ushort chatLen = BitConverter.ToUInt16(segment.Array, segment.Offset + count);
+		ushort chatLen = BitConverter.ToUInt16(_segment.Array, _segment.Offset + count);
 		count += sizeof(ushort);
-		this.chat = Encoding.Unicode.GetString(segment.Array, segment.Offset + count, chatLen);
+		this.chat = Encoding.Unicode.GetString(_segment.Array, _segment.Offset + count, chatLen);
 		count += chatLen;
 	}
 
