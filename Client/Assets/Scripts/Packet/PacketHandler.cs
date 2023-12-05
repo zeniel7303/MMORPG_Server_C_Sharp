@@ -13,6 +13,8 @@ class PacketHandler
 		ServerSession serverSession = _session as ServerSession;
 
 		if (chatPacket.playerId == 1)
+        {
 			Debug.Log(chatPacket.chat);
+		}
 	}
 }
