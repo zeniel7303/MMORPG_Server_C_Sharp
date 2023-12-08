@@ -6,18 +6,28 @@ using System.Text;
 
 class PacketHandler
 {
-	public static void C_ChatHandler(PacketSession _session, IPacket _packet)
-	{
-		C_Chat chatPacket = _packet as C_Chat;
+	public static void C_LeaveGameHandler(PacketSession _session, IPacket _packet)
+    {
 		ClientSession clientSession = _session as ClientSession;
 
 		if (clientSession.Room == null)
 			return;
 
-		// clientSession의 Room이 NULL로 바뀌면 나중에 잡큐에서 꺼내쓸 때 문제가 생김.
-		// -> 임시 객체를 만들어 문제 해결
-		GameRoom tempRoom = clientSession.Room;
-		tempRoom.Push(
-			() => tempRoom.Broadcast(clientSession, chatPacket.chat));
+		GameRoom room = clientSession.Room;
+		room.Push(() => room.Leave(clientSession));
+	}
+
+	public static void C_MoveHandler(PacketSession _session, IPacket _packet)
+    {
+		C_Move movePacket = _packet as C_Move;
+		ClientSession clientSession = _session as ClientSession;
+
+		if (clientSession.Room == null)
+			return;
+
+		Console.WriteLine($"{movePacket.posX}, {movePacket.posY}, {movePacket.posZ}");
+
+		GameRoom room = clientSession.Room;
+		room.Push(() => room.Move(clientSession, movePacket));
 	}
 }

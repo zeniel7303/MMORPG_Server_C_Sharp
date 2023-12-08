@@ -12,7 +12,7 @@ class PacketHandler
 		S_Chat chatPacket = _packet as S_Chat;
 		ServerSession serverSession = _session as ServerSession;
 
-		if (chatPacket.playerId == 1)
+		//if (chatPacket.playerId == 1)
         {
 			Debug.Log(chatPacket.chat);
 
