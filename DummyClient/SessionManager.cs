@@ -30,9 +30,9 @@ namespace DummyClient
                 foreach (ServerSession session in m_sessions)
                 {
                     C_Move movePacket = new C_Move();
-                    movePacket.posX = m_random.Next(-100, 100);
+                    movePacket.posX = m_random.Next(-50, 50);
                     movePacket.posY = 0;
-                    movePacket.posZ = m_random.Next(-100, 100);
+                    movePacket.posZ = m_random.Next(-50, 50);
                     session.Send(movePacket.Write());
                 }
             }
